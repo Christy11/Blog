@@ -69,7 +69,7 @@ console.log(instance.age);	// 22
 
 #### 3.1.3 原型链分析
 
-![1533808187619](C:\Users\吴晨\AppData\Local\Temp\1533808187619.png)
+![借用构造函数](https://github.com/Christy11/Blog/blob/master/images/inheritance/1.png)
 
 从图中可知，Parent和Child两个构造函数之间并没有直接在原型链上有所关联，但是由于Child构造函数内部调用了Parent的构造函数，故Child的实例中会有Parent中的属性，即传入的属性值name，而实例上则会把Parent的所有属性都继承下来。
 
@@ -87,11 +87,8 @@ console.log(instance.age);	// 22
 >
 > 缺点：父类属性被所有子类实例共享（**所有属性均共享**），子类构建实例无法向父类传参
 
-注 核心代码第二句有修改子类的构造函数指向的行为，此处会在后面
-
-[^]: 
-
-解释。
+注：核心代码第二句有修改子类的构造函数指向的行为，此处会在后面 **[原型对象修复构造函数]**
+中解释。
 
 #### 3.2.2 实例分析
 
@@ -120,7 +117,7 @@ console.log(instance2.family);	// ["Alice", "Bob", "Cloud"]，此处由于原型
 
 #### 3.2.3 原型链分析
 
-![1533879632858](C:\Users\吴晨\AppData\Local\Temp\1533879632858.png)
+![原型链继承](https://github.com/Christy11/Blog/blob/master/images/inheritance/2.png)
 
 图中红色的部分，是原型链相较构造函数继承变化的部分。不难发现，由于Child.prototype = new Parent()，Child.prototype对象成为了Parent的实例，故Child.prototype的内部原型属性指向构造函数Parent的原型对象，即Child.prototype.__ proto__ = Parent.prototype，同时，所有的属性都会被共享，基本属性可以通过实例新建同名属性覆盖，而引用属性则是所有实例共享，然而并不是是所有的引用属性都希望被共享，所以单纯的原型链继承使用得很少。
 
@@ -169,7 +166,7 @@ console.log(instance.name);	// Tony
 
 #### 3.3.3 原型链分析
 
-![1533820111913](C:\Users\吴晨\AppData\Local\Temp\1533820111913.png)
+![原型式继承](https://github.com/Christy11/Blog/blob/master/images/inheritance/1.png)
 
 图中灰色的地方便是临时构造函数F()在原型链中的位置。
 
@@ -216,7 +213,7 @@ console.log(instance2.family);	// ["Alice", "Bob"]，此处引用属性不会被
 
 #### 3.4.3 原型链分析
 
-![1533819546677](C:\Users\吴晨\AppData\Local\Temp\1533819546677.png)
+![组合继承](https://github.com/Christy11/Blog/blob/master/images/inheritance/4.png)
 
 组合继承相对于原型链继承来说，可以共享原型链上面的方法，而每个实例又有自己独立的属性。是一种比较理想的优化。
 
@@ -256,7 +253,7 @@ console.log(instance.sayName());	// Hello, Tony
 
 #### 3.5.3 原型链分析
 
-![1533820836837](C:\Users\吴晨\AppData\Local\Temp\1533820836837.png)
+![寄生式继承](https://github.com/Christy11/Blog/blob/master/images/inheritance/5.png)
 
 这个例子的代码基于Parent返回了一个新对象instance。新对象不仅可以访问Parent的所有属性和方法，还有自己的sayNme()函数。
 
@@ -309,12 +306,62 @@ instance.sayAge();	// 18
 
 #### 3.6.3 原型链分析
 
-![1533874625227](C:\Users\吴晨\AppData\Local\Temp\1533874625227.png)
+![寄生组合式继承](https://github.com/Christy11/Blog/blob/master/images/inheritance/6.png)
 
 由图中可以发现，通过原型式继承，将`Child.prototype`和`Parent.prototype`两个对象构建成原型链，再通过`Parent.call(this, name)`的行为，执行一次`Parent`的构造函数。优化了组合继承中，构造函数被两次调用的问题。
 
 总体来看，寄生组合继承模式实现了所有属性相关的需求：每个实例都有自己的不被共享的实例属性，而希望共享的方法也都在原型链上实现。是最理想的继承实现方式。
 
-##### [参考网址] 
+## 其他
+#### 原型对象修复构造函数
 
-https://segmentfault.com/a/1190000015727237
+在原型链继承中，我们常常会看到这样的代码：
+
+``` javascript
+function Parent() {}
+Parent.prototype.name = 'Tony';
+Parent.prototype.age = 22;
+Parent.prototype.sayName = function() {
+    console.log(this.name);
+}
+```
+
+这样每添加一个属性和方法就要敲一遍Parent.prototype看起来很冗余。为减少不必要的输入，也为了从视觉上更好地封装原型的功能，更常见的做法是用一个包含所有属性和方法的对象字面量来重写整个原型对象：
+
+``` javascript
+function Parent() {}
+Parent.prototype = {
+    name: 'Tony',
+    age: 22,
+    sayName: function() {
+       console.log(this.name);
+    } 
+}
+```
+
+这样看起来似乎简洁方便，但是也出现了一个问题，对象原型上的constructor没有了……
+
+![寄生组合式继承](https://github.com/Christy11/Blog/blob/master/images/inheritance/7.png)
+
+我们知道，每创建一个函数，就会同时创建它的prototype对象，这个对象也会自动获得constructor属性。而我们使用后面对象字面量的语法，本质上完全重写了默认的prototype对象（我认为这里可以理解为指向内存另一个由Object创造的新对象），原型对象应有的constructor属性则需要重新赋值，才能够指向到用户期望的函数对象。
+
+故此处还需要重新为constructor赋值：
+
+``` javascript
+// 重新设置构造函数
+Object.defineProperty(Parent.prototype, 'constructor', {
+    enumerable: false,
+    value: Parent
+});
+```
+
+
+##### [参考书目] 
+
+[一篇文章理解JS继承](https://segmentfault.com/a/1190000015727237)
+
+[js继承、构造函数继承、原型链继承、组合继承、组合继承优化、寄生组合继承](https://segmentfault.com/a/1190000015216289)
+
+《JavaScript高级程序设计》
+
+《你不知道的JavaScript》（上卷）
