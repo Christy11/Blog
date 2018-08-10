@@ -166,7 +166,7 @@ console.log(instance.name);	// Tony
 
 #### 3.3.3 原型链分析
 
-![原型式继承](https://github.com/Christy11/Blog/blob/master/images/inheritance/1.png)
+![原型式继承](https://github.com/Christy11/Blog/blob/master/images/inheritance/3.png)
 
 图中灰色的地方便是临时构造函数F()在原型链中的位置。
 
