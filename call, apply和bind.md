@@ -22,7 +22,7 @@
 // context表示需要被绑定的上下文
 Function.prototype.myCall = function(context) {
     var context = context || window; // 将执行上下文设置为当前上下文，若无参数值，则设置为全局上下文
-    context.func = this; // 使当前上下文可以执行函数
+    context.func = this; // 把当前的函数对象赋予context.func，相当于在context中新建一个属性，func函数变成当前对象的属性，那么调用方法时就是绑定在自己身上了
     var args = []; // call()方法必须逐个传参，此处将arguments转为数组放入函数中执行
     // arguments是类数组对象，可通过length获取长度，遍历从1开始是因为arguments[0] = context
     for(var i = 1; i < arguments.length; i ++) {
@@ -51,7 +51,7 @@ Function.prototype.myCall = function(context) {
 // context表示需要被绑定的上下文
 Function.prototype.myApply = function(context, arr) {
     var context = context || window; // 将执行上下文设置为当前上下文，若无参数值，则设置为全局上下文
-    context.func = this; // 使当前上下文可以执行函数
+    context.func = this; // 把当前的函数对象赋予context.func，相当于在context中新建一个属性，func函数变成当前对象的属性，那么调用方法时就是绑定在自己身上了
     var result;
     if (!arr) { // 如果没有传值，直接执行函数
         result = context.func();
@@ -75,7 +75,7 @@ Function.prototype.myApply = function(context, arr) {
 
 由上表可知，`bind()`方法可接收多个参数，第一个参数为执行上下文，后面可依次接收其他参数。
 
-`bind()`方法会创建一个硬编码的新函数，把指定的参数设置为**`this`**的上下文并调用原始函数。
+`bind()`方法会创建一个硬编码的新函数，把指定的参数设置为**`this`**的上下文并调用原始函数。`bind()`函数**本质上**也是`call()`方法的**语法糖**。
 
 看一下bind()函数的大致实现思路：
 
@@ -124,6 +124,21 @@ call和apply都是用于修改函数执行上下文的方法，两个方法都�
 | 性能                     | ☆☆☆☆☆                    | ☆☆☆☆                      | —                                                      |
 | 返回值                   | 返回调用函数本身的返回值 | 返回调用函数本身的返回值  | 返回硬编码的新函数                                     |
 | 绑定后是否可修改绑定对象 | 可以                     | 可以                      | bind()绑定不能被call()和apply()修改，**可以被new修改** |
+
+最后，上文提到，apply和bind都是call的语法糖，故call函数理解了，apply和bind就可以直接用了：
+
+``` javascript
+// apply超简单伪码
+apply(context, argsArr) {
+    func.call(context, ...argsArr);
+}
+// bind超简单伪码
+bind(context, args) {
+    return function() {
+        func.call(context, args);
+    }
+}
+```
 
 【参考网址】
 
