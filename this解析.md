@@ -121,11 +121,12 @@ function imitateNew() {
     // 1.创建新对象
     var obj = new Object(); 
     // 2.为新对象执行[[Prototype]]连接
-    var Context = [].shift.call(arguments);
+    // 执行imitateNew(Foo, 3),下面这行代码会直接获取函数Foo，故为构造函数
+    var Constructor = [].shift.call(arguments);
     // 每个实例的__proto__都会指向构造函数的prototype
-    obj.__proto__ = Context.prototype;
+    obj.__proto__ = Constructor.prototype;
     // 3.新对象绑定函数调用的this(调用构造函数)
-    var result = Context.apply(obj, arguments);
+    var result = Constructor.apply(obj, arguments);
     // 4.判断是否返回其他对象
     return tyof result === 'object' ? ret : obj;
 }
